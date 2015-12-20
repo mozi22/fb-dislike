@@ -2,7 +2,6 @@
 Parse.initialize("", "");
 
 
-
 var ParseObj = {
 
       user : null,
@@ -56,18 +55,24 @@ var ParseObj = {
 
       // will go through all the disliked posts and save them.
       savePost: function(){
+        var self = this;
 
-        for(var i=0; i < this.activityArray; i++){        
-          var Posts = Parse.Object.extend(Const.POST_OBJECT);
+        window.onbeforeunload = function() {
+          if(self.activityArray.length > 0){
+            for(var i=0; i < self.activityArray.length; i++){        
+              var Posts = Parse.Object.extend(Const.POST_OBJECT);
 
-          var post = new Posts();
-          post.set(Const.POSTID,this.activityArray[i]);
-          post.set(Const.USER,this.user);
+              var post = new Posts();
+              post.set(Const.POSTID,this.activityArray[i]);
+              post.set(Const.USER,self.user);
 
-          this.user.add(this.post);
-        }
+              self.user.add(self.post);
+            }
 
-        this.user.save();
+            self.user.save();
+          }
+          };
+
       },
 
 
@@ -107,6 +112,4 @@ var ParseObj = {
     };
 
 var parsee = Object.create(ParseObj);
-
-
-
+parsee.savePost();
