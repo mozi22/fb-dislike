@@ -10,7 +10,9 @@ var ParseObj = {
       // it will have all the postid's for which this user has pressed the
       // dislike button and if the user will undo the dislike we'll remove
       // that postid from this array.
-      activityArray : new Array(), 
+      dislikeArray : new Array(), 
+
+      undoArray : new Array(), 
 
 
       getUser: function(userobj){
@@ -55,17 +57,23 @@ var ParseObj = {
 
       // will go through all the disliked posts and save them.
       savePost: function(){
-          if(this.activityArray.length > 0){
-            for(var i=0; i < this.activityArray.length; i++){        
+          if(this.dislikeArray.length > 0){
+            for(var i=0; i < this.dislikeArray.length; i++){        
               var Posts = Parse.Object.extend(Const.POST_OBJECT);
 
               var post = new Posts();
-              post.set(Const.POSTID,this.activityArray[i]);
+              post.set(Const.POSTID,this.dislikeArray[i]);
               post.set(Const.USER,this.user);
               post.save();
 
             }
 
+          }
+
+          if(this.undoArray.length > 0){
+            // delete from Post_obj where postID = 1,2,3  <=== 1,2,3 refers to undoArray values.
+
+            var query = new Parse.Query(Const.POST_OBJECT);
           }
 
       },
@@ -94,14 +102,25 @@ var ParseObj = {
       },
 
       dislikedPost: function(id){
-        this.activityArray.push(id)
+        this.dislikeArray.push(id)
+
+
+        // temporary
         this.savePost();
       },
 
       undoDislike: function(id){
-        var index = this.activityArray.indexOf(id);
+
+        var index = this.dislikeArray.indexOf(id);
         if (index >= 0) {
-          this.activityArray.splice( index, 1 );
+
+          // just remove it from this array since we haven't saved it in the db yet.
+          this.dislikeArray.splice( index, 1 );
+        }
+        else{
+          // value does not exist in dislikeArray, this means that the undoed dislike post is not from the 
+          // current activity, hence we'll keep it to remove it's record from the database.
+          this.undoArray.push(id);
         }
       },
 
