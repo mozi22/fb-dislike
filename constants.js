@@ -11,6 +11,7 @@ var Const = {
 
   POST_OBJECT: "POST_OBJECT",
   POSTID : "POSTID",
+  USER_DISLIKE: "USER_DISLIKE"
 
 
 
