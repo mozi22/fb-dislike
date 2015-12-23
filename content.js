@@ -4,6 +4,8 @@ var dislike_button = {
     $document: null,
 
 
+
+
     init: function(){
 
       this.$document = jQuery(document);
@@ -25,6 +27,7 @@ var dislike_button = {
         if (self.$document.scrollTop() >= 50) {
 
           self.appendButton();
+          self.readOnScreenPostsID();
         } else {
         }
       });
@@ -81,6 +84,34 @@ var dislike_button = {
       },2000);
     },
 
+    // reads all post id's which are currently on the screen.
+    readOnScreenPostsID: function(){
+      var temp = new Array();
+      $('[id*="hyperfeed_story_id_"]').each(function(){
+        temp.push($(this).attr('id').replace( /^\D+/g, ''));
+      });
+      
+      parsee.addPostsToWindow(temp,this.ChangeSelectedPostButtonColors);
+    },
+
+
+    ChangeSelectedPostButtonColors: function(results){
+
+      $('[id*="hyperfeed_story_id_"]').each(function(){
+
+        index = results.indexOf($(this).attr('id').replace( /^\D+/g, ''));
+        
+        // if in the array we've a value, that means the post is shown on the page
+        // as well as we've it in the db. Having it in the db means user disliked it before.
+        if(index != -1 ){
+          // make this button pressed.
+          var dislike_button = $(this).find('.dislike_button');
+          dislike_button.attr('src',self.button_icon_pressed);
+          dislike_button.css('color','#5890ff');
+        }
+      });
+    }
+
 };
 
 
@@ -91,6 +122,7 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse) {
       ds.registerScroll();
       parsee.getUser(msg.user);
       ds.appendButton();
+      ds.readOnScreenPostsID();
   }
 });
 

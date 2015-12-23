@@ -1,5 +1,5 @@
 
-Parse.initialize("", "");
+Parse.initialize("MH0Utt8Fle2nfiN0IkHeP1ZigXEOLGo34ZzdzRhd", "2XVNsLJxk99mdn6TWo5casBpb3TJ3H4msms363Os");
 
 
 var ParseObj = {
@@ -11,6 +11,9 @@ var ParseObj = {
       // dislike button and if the user will undo the dislike we'll remove
       // that postid from this array.
       dislikeArray : new Array(), 
+
+      // contains all the post id's which are currently on users screen.
+      currentWindowArray: new Array(),
 
       undoArray : new Array(), 
 
@@ -74,6 +77,14 @@ var ParseObj = {
             // delete from Post_obj where postID = 1,2,3  <=== 1,2,3 refers to undoArray values.
 
             var query = new Parse.Query(Const.POST_OBJECT);
+            query.containedIn(Const.POSTID,this.undoArray);
+            query.find().then(function(results) {
+                return Parse.Object.destroyAll(results);
+            }).then(function() {
+                response.success();
+            }, function(error) {
+                response.error(error.message);
+            });          
           }
 
       },
@@ -94,7 +105,6 @@ var ParseObj = {
           error: function(error) {
 
             // user does not exists or there's other problem.
-
             alert("Error: " + error.code + " " + error.message);
           }
         });
@@ -104,9 +114,41 @@ var ParseObj = {
       dislikedPost: function(id){
         this.dislikeArray.push(id)
 
-
         // temporary
         this.savePost();
+      },
+
+      addPostsToWindow: function(posts,func){
+
+        // keep only distance values.
+        // The values can be repeated since fb loads posts on scroll
+        // due to which this function will be called with all the ids of the page
+        // the ids which are previously added will be in the array again.
+
+        this.currentWindowArray.concat(posts);
+        this.currentWindowArray = this.ArrNoDupe(this.currentWindowArray);
+
+        // get these records from parse in order to show the already disliked button as disliked.
+        var query = new Parse.Query(Const.POST_OBJECT);
+        query.containedIn(Const.POSTID,this.currentWindowArray);
+        query.find().then(function(results) {
+            func(results);
+        }).then(function() {
+            response.success();
+        }, function(error) {
+            response.error(error.message);
+        });
+      },
+
+      // returns the array with distinct values.
+      ArrNoDupe: function(a) {
+          var temp = {};
+          for (var i = 0; i < a.length; i++)
+              temp[a[i]] = true;
+          var r = [];
+          for (var k in temp)
+              r.push(k);
+          return r;
       },
 
       undoDislike: function(id){
