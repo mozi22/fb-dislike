@@ -22,9 +22,11 @@ var dislike_button = {
     registerScroll:function(){
 
       var self = this;
+       
 
       this.$document.scroll(function() {
-        if (self.$document.scrollTop() >= 50) {
+       var scrollPercent = 100 * $(window).scrollTop() / (self.$document.height() - $(window).height());
+        if (scrollPercent >= 60) {
 
           self.appendButton();
           self.readOnScreenPostsID();
@@ -97,6 +99,9 @@ var dislike_button = {
 
     ChangeSelectedPostButtonColors: function(results){
 
+      if(results.length == 0)
+        return;
+
       $('[id*="hyperfeed_story_id_"]').each(function(){
 
         index = results.indexOf($(this).attr('id').replace( /^\D+/g, ''));
@@ -122,7 +127,7 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse) {
       ds.registerScroll();
       parsee.getUser(msg.user);
       ds.appendButton();
-      ds.ChangeSelectedPostButtonColors();
+      ds.readOnScreenPostsID();
   }
 });
 

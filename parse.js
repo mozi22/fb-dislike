@@ -1,5 +1,5 @@
 
-Parse.initialize("MH0Utt8Fle2nfiN0IkHeP1ZigXEOLGo34ZzdzRhd", "2XVNsLJxk99mdn6TWo5casBpb3TJ3H4msms363Os");
+Parse.initialize("", "");
 
 
 var ParseObj = {
@@ -125,18 +125,17 @@ var ParseObj = {
         // due to which this function will be called with all the ids of the page
         // the ids which are previously added will be in the array again.
 
-        this.currentWindowArray.concat(posts);
+        this.currentWindowArray = this.currentWindowArray.concat(posts);
         this.currentWindowArray = this.ArrNoDupe(this.currentWindowArray);
-
+        console.log(this.currentWindowArray.length);
         // get these records from parse in order to show the already disliked button as disliked.
         var query = new Parse.Query(Const.POST_OBJECT);
         query.containedIn(Const.POSTID,this.currentWindowArray);
         query.find().then(function(results) {
             func(results);
         }).then(function() {
-            response.success();
         }, function(error) {
-            response.error(error.message);
+          console.log(error);
         });
       },
 
