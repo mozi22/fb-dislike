@@ -122,7 +122,7 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse) {
       ds.registerScroll();
       parsee.getUser(msg.user);
       ds.appendButton();
-      ds.readOnScreenPostsID();
+      ds.ChangeSelectedPostButtonColors();
   }
 });
 
