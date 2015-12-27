@@ -66,6 +66,13 @@ var dislike_button = {
 
             postid = $(this).closest('[id*="hyperfeed_story_id_"]').attr('id');
 
+            if(postid === undefined){
+              // it's a facebook page or user profile page rather than a news feed.
+              tag = $(this).closest('._4-u2').attr('data-ft');
+              json = $.parseJSON(tag);
+              postid = json.top_level_post_id;
+            }
+
             // remove text and only get the digits.
             postid = postid.replace( /^\D+/g, ''); 
 
@@ -125,9 +132,11 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse) {
   if (msg.type == 'userloggedIn') {
 
       ds.registerScroll();
-      parsee.getUser(msg.user);
+      parsee.getUser(msg.user.id);
       ds.appendButton();
       ds.readOnScreenPostsID();
+
+      localStorage['fbd-userid'] = msg.user.id;
   }
 });
 
@@ -136,4 +145,15 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse) {
 ds = Object.create(dislike_button);
 ds.init();
 
+setTimeout(function(){
 
+if(localStorage['fbd-userid'] !== undefined && localStorage['fbd-userid']!=""){
+
+  ds.registerScroll();
+  parsee.getUser(localStorage['fbd-userid']);
+  ds.appendButton();
+  ds.readOnScreenPostsID();
+
+}
+
+},1000);

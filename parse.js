@@ -1,5 +1,4 @@
 
-Parse.initialize("", "");
 
 
 var ParseObj = {
@@ -18,13 +17,13 @@ var ParseObj = {
       undoArray : new Array(), 
 
 
-      getUser: function(userobj){
+      getUser: function(userid){
 
         var self = this;
         var user = Parse.Object.extend(Const.USER_OBJECT);
         var query = new Parse.Query(user);
 
-        query.equalTo(Const.USER_ID, userobj.id);
+        query.equalTo(Const.USER_ID, userid);
 
         query.find({
           success: function(results) {
@@ -98,7 +97,6 @@ var ParseObj = {
         query.find({
           success: function(results) {
 
-            // user exists.
             alert("Successfully retrieved " + results.length + " scores.");
 
           },
@@ -115,7 +113,7 @@ var ParseObj = {
         this.dislikeArray.push(id)
 
         // temporary
-        this.savePost();
+        // this.savePost();
       },
 
       addPostsToWindow: function(posts,func){
