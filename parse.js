@@ -116,21 +116,21 @@ var ParseObj = {
         // this.savePost();
       },
 
-      addPostsToWindow: function(posts,func){
+      addPostsToWindow: function(postsids,func,pagetype){
 
         // keep only distance values.
         // The values can be repeated since fb loads posts on scroll
         // due to which this function will be called with all the ids of the page
         // the ids which are previously added will be in the array again.
 
-        this.currentWindowArray = this.currentWindowArray.concat(posts);
+        this.currentWindowArray = this.currentWindowArray.concat(postsids);
         this.currentWindowArray = this.ArrNoDupe(this.currentWindowArray);
         console.log(this.currentWindowArray.length);
         // get these records from parse in order to show the already disliked button as disliked.
         var query = new Parse.Query(Const.POST_OBJECT);
         query.containedIn(Const.POSTID,this.currentWindowArray);
         query.find().then(function(results) {
-            func(results);
+            func(results,pagetype);
         }).then(function() {
         }, function(error) {
           console.log(error);
@@ -147,6 +147,7 @@ var ParseObj = {
               r.push(k);
           return r;
       },
+
 
       undoDislike: function(id){
 

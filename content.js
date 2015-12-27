@@ -94,34 +94,77 @@ var dislike_button = {
     },
 
     // reads all post id's which are currently on the screen.
+  
+    // this will keep reading all the posts id's of the page
+    // as they kept on dynamically being added by facebook
+    // on news feed or users profile page.
+
+    // We'll use this to retrieve the information of these posts
+    // from parse to see if they were already disliked by the user before.
+
     readOnScreenPostsID: function(){
       var temp = new Array();
       $('[id*="hyperfeed_story_id_"]').each(function(){
         temp.push($(this).attr('id').replace( /^\D+/g, ''));
       });
       
-      parsee.addPostsToWindow(temp,this.ChangeSelectedPostButtonColors);
+      if(temp.length == 0){
+        // maybe the page is user profile page.
+        $('._4-u2.mbm._5jmm._5pat._5v3q._4-u8._x72._50nb').each(function(){
+          
+          tag = $(this).attr('data-ft'); 
+          json = $.parseJSON(tag);
+          postid = json.top_level_post_id;
+
+          temp.push(postid);
+
+        });
+
+      }
+
+      if(temp.length == 0){
+        return;
+      }
+
+      parsee.addPostsToWindow(temp,this.ChangeSelectedPostButtonColors,"profile");
     },
 
 
-    ChangeSelectedPostButtonColors: function(results){
+    ChangeSelectedPostButtonColors: function(results,pagetype){
 
       if(results.length == 0)
         return;
 
-      $('[id*="hyperfeed_story_id_"]').each(function(){
+      if(pagetype == "profile"){
+        $('._4-u2.mbm._5jmm._5pat._5v3q._4-u8._x72._50nb').each(function(){
 
-        index = results.indexOf($(this).attr('id').replace( /^\D+/g, ''));
-        
-        // if in the array we've a value, that means the post is shown on the page
-        // as well as we've it in the db. Having it in the db means user disliked it before.
-        if(index != -1 ){
-          // make this button pressed.
-          var dislike_button = $(this).find('.dislike_button');
-          dislike_button.attr('src',self.button_icon_pressed);
-          dislike_button.css('color','#5890ff');
-        }
-      });
+          for(i=0;i<results.length;i++){
+            
+            if(results[i].get("POSTID") == $.parseJSON($(this).attr('data-ft')).top_level_post_id){
+              // matched. change the color of button to blue.
+              var dislike_button = $(this).find('.dislike_button');
+              dislike_button.attr('src',self.button_icon_pressed);
+              dislike_button.css('color','#5890ff');
+            }
+          }
+
+        });
+      }
+      else{
+
+        $('[id*="hyperfeed_story_id_"]').each(function(){
+
+          for(i=0;i<results.length;i++){
+            if(results[i].get("POSTID") == $(this).attr('id').replace( /^\D+/g, '')){
+
+              // make this button pressed.
+              var dislike_button = $(this).find('.dislike_button');
+              dislike_button.attr('src',self.button_icon_pressed);
+              dislike_button.css('color','#5890ff');
+            }
+          }
+        });
+      }
     }
 
 };
@@ -131,11 +174,7 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse) {
 
   if (msg.type == 'userloggedIn') {
 
-      ds.registerScroll();
-      parsee.getUser(msg.user.id);
-      ds.appendButton();
-      ds.readOnScreenPostsID();
-
+      registerPostLoginOptions(msg.user.id);
       localStorage['fbd-userid'] = msg.user.id;
   }
 });
@@ -145,15 +184,20 @@ chrome.extension.onMessage.addListener(function(msg, sender, sendResponse) {
 ds = Object.create(dislike_button);
 ds.init();
 
+
+function registerPostLoginOptions(id){
+
+      ds.registerScroll();
+      parsee.getUser(id);
+      ds.appendButton();
+      ds.readOnScreenPostsID();
+}
+
+// if the user is already logged in and he/she refreshes the page.
 setTimeout(function(){
 
 if(localStorage['fbd-userid'] !== undefined && localStorage['fbd-userid']!=""){
-
-  ds.registerScroll();
-  parsee.getUser(localStorage['fbd-userid']);
-  ds.appendButton();
-  ds.readOnScreenPostsID();
-
+  registerPostLoginOptions(localStorage['fbd-userid']);
 }
 
-},1000);
+},2000);
