@@ -22,7 +22,7 @@ var dislike_button = {
 
       this.$document.scroll(function() {
        var scrollPercent = 100 * $(window).scrollTop() / (self.$document.height() - $(window).height());
-        if (scrollPercent >= 60) {
+        if (scrollPercent >= 20) {
 
           self.readOnScreenPostsID();
         } else {
