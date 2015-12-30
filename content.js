@@ -1,14 +1,11 @@
 var dislike_button = {
 
-    button_icon: chrome.extension.getURL("images/dislike_icon.png"),
-    button_icon_pressed: chrome.extension.getURL("images/dislike_icon_pressed.png"),
     $document: null,
 
-
+    posts: new Array(),
 
 
     init: function(){
-
       this.$document = jQuery(document);
     },
 
@@ -27,7 +24,6 @@ var dislike_button = {
        var scrollPercent = 100 * $(window).scrollTop() / (self.$document.height() - $(window).height());
         if (scrollPercent >= 60) {
 
-          self.appendButton();
           self.readOnScreenPostsID();
         } else {
         }
@@ -35,85 +31,45 @@ var dislike_button = {
     },
 
 
-    appendButton: function(){
-      // append the button to the initial page posts
-      // after 2 seconds so that the posts are first
-      // loaded properly and than the button appended.
-      var self = this;
-      setTimeout(function(){
-
-        // it appends the button in the posts. If 
-        // the button is not there.
-        jQuery('._42nr:not(:has(.dislike_button))').append('<span><a data-reactroot="" class="dislike_button" role="button" href="#" title="Dislike""><img src="'+self.button_icon+'" style="margin-right:5px;margin-top:5px;" />Dislike</a></span>');
-
-        $( ".dislike_button").unbind( "click" );
-        jQuery('.dislike_button').click(function(){
-
-            var disliked = true;
-
-            if($(this).css('color') == "rgb(88, 144, 255)"){
-              // undo
-              disliked = false;
-
-              $(this).children().attr('src',self.button_icon);
-              $(this).css('color','#7f7f7f');
-            }
-            else{            
-              $(this).children().attr('src',self.button_icon_pressed);
-              $(this).css('color','#5890ff');
-            }
-
-            postid = $(this).closest('[id*="hyperfeed_story_id_"]').attr('id');
-
-            if(postid === undefined){
-              // it's a facebook page or user profile page rather than a news feed.
-              tag = $(this).closest('._4-u2').attr('data-ft');
-              json = $.parseJSON(tag);
-              postid = json.top_level_post_id;
-            }
-
-            // remove text and only get the digits.
-            postid = postid.replace( /^\D+/g, ''); 
-
-
-
-          if( disliked == true){
-  
-            // disliked
-            parsee.dislikedPost(postid);
-
-          }else{
-            // undo disliked
-            parsee.undoDislike(postid);
-          }
-
-
-        });
-      },2000);
-    },
-
-    // reads all post id's which are currently on the screen.
-  
-    // this will keep reading all the posts id's of the page
-    // as they kept on dynamically being added by facebook
-    // on news feed or users profile page.
-
-    // We'll use this to retrieve the information of these posts
-    // from parse to see if they were already disliked by the user before.
+    /*
+    *
+    * 1) Reads all posts one by one and finds their ids.
+    *
+    * 2) Appends dislike buttons for those posts if it doesn't exists.
+    *
+    * 3) Makes call to db to retrieve the records with the postIds found in step 1.
+    *
+    * 4) If records exists, go through the posts and post objects again to find matching
+    *    ids and updating the color of buttons as selected.
+    *
+    */
 
     readOnScreenPostsID: function(){
+
+      var self = this;
+
       var temp = new Array();
+
       $('[id*="hyperfeed_story_id_"]').each(function(){
-        temp.push($(this).attr('id').replace( /^\D+/g, ''));
+
+        postid = $(this).attr('id').replace( /^\D+/g, '');
+
+        self.addDislikeButton(postid,$(this));
+
+
+        temp.push(postid);
       });
       
       if(temp.length == 0){
         // maybe the page is user profile page.
-        $('._4-u2.mbm._5jmm._5pat._5v3q._4-u8._x72._50nb').each(function(){
+        $('[class*="_4-u2 mbm _5jmm _5pat _5v3q _4-u8"]').each(function(){
           
           tag = $(this).attr('data-ft'); 
           json = $.parseJSON(tag);
           postid = json.top_level_post_id;
+
+
+          self.addDislikeButton(postid,$(this));
 
           temp.push(postid);
 
@@ -125,52 +81,53 @@ var dislike_button = {
         return;
       }
 
-      parsee.addPostsToWindow(temp,this.ChangeSelectedPostButtonColors,"profile");
+      parsee.addPostsToWindow(temp,this.changeInitialSelection,this.posts);
     },
 
 
-    ChangeSelectedPostButtonColors: function(results,pagetype){
+    // this function appends a button to the posts, if it isn't appended yet.
+    // and creates an object representation(posts.js) for each post dislike button.
+    addDislikeButton : function(postid,tag){
 
-      var button_icon =  chrome.extension.getURL("images/dislike_icon.png");
-      var button_icon_pressed =  chrome.extension.getURL("images/dislike_icon_pressed.png");
+      if(!this.CheckIfDislikeButtonExists(postid)){
 
 
-      if(results.length == 0)
+        post = Object.create(Post);
+        post.init(tag,1);
+        post.setPostID(postid);
+
+        this.posts.push(post);
+      }
+    },
+
+
+    changeInitialSelection: function(results,posts){
+
+      this.posts = posts;
+      if(results.length == 0){
         return;
-
-      var self = this;
-
-      if(pagetype == "profile"){
-        $('._4-u2.mbm._5jmm._5pat._5v3q._4-u8._x72._50nb').each(function(){
-
-          for(i=0;i<results.length;i++){
-            
-            if(results[i].get("POSTID") == $.parseJSON($(this).attr('data-ft')).top_level_post_id){
-              // matched. change the color of button to blue.
-              var dislike_button = $(this).find('.dislike_button');
-              dislike_button.attr('src',button_icon_pressed);
-              dislike_button.css('color','#5890ff');
-            }
-          }
-
-        });
       }
-      else{
 
-        $('[id*="hyperfeed_story_id_"]').each(function(){
+      for(i=0;i<results.length;i++){
 
-          for(i=0;i<results.length;i++){
-            if(results[i].get("POSTID") == $(this).attr('id').replace( /^\D+/g, '')){
+        for(j=0;j<this.posts.length;j++){
 
-              // make this button pressed.
-              var dislike_button = $(this).find('.dislike_button');
-              dislike_button.attr('src',button_icon_pressed);
-              dislike_button.css('color','#5890ff');
-            }
+          if(results[i].get("POSTID") == this.posts[j].getPostID()){
+            this.posts[j].toggleDislike();
           }
-        });
+        }
       }
-    }
+
+    },
+
+    CheckIfDislikeButtonExists: function(id){
+      for(i=0;i<this.posts.length;i++){
+        if(this.posts[i].getPostID() == id){
+          return true;
+        }
+      }
+      return false;
+    },
 
 };
 
@@ -194,7 +151,6 @@ function registerPostLoginOptions(id){
 
       ds.registerScroll();
       parsee.getUser(id);
-      ds.appendButton();
       ds.readOnScreenPostsID();
 }
 
