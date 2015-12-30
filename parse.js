@@ -57,7 +57,7 @@ var ParseObj = {
       },
 
       // will go through all the disliked posts and save them.
-      savePost: function(){
+      savePosts: function(){
           if(this.dislikeArray.length > 0){
             for(var i=0; i < this.dislikeArray.length; i++){        
               var Posts = Parse.Object.extend(Const.POST_OBJECT);
@@ -71,21 +71,33 @@ var ParseObj = {
 
           }
 
-          if(this.undoArray.length > 0){
-            // delete from Post_obj where postID = 1,2,3  <=== 1,2,3 refers to undoArray values.
-
-            var query = new Parse.Query(Const.POST_OBJECT);
-            query.containedIn(Const.POSTID,this.undoArray);
-            query.find().then(function(results) {
-                return Parse.Object.destroyAll(results);
-            }).then(function() {
-                response.success();
-            }, function(error) {
-                response.error(error.message);
-            });          
-          }
-
       },
+
+      removePosts: function(){
+
+        if(this.undoArray.length > 0){
+          // delete from Post_obj where postID = 1,2,3  <=== 1,2,3 refers to undoArray values.
+
+          var query = new Parse.Query(Const.POST_OBJECT);
+          query.containedIn(Const.POSTID,this.undoArray);
+          query.find().then(function(results) {
+              return Parse.Object.destroyAll(results);
+          }).then(function() {
+              
+          }, function(error) {
+          });          
+        }
+
+        // refresh array since we're deleting record from db as soon as the user dislikes 
+        // a post from previous activity.
+
+        // we're not removing on page refresh or unload event because it takes more time to delete
+        // i.e we first make a call to the parse retrieve data and then make another call to delete.
+        // by the time we make first call, our page refreshes already resulting in data not being
+        // deleted.
+        removePosts = [];
+      },
+
 
 
       getPosts: function(userid){
@@ -110,9 +122,6 @@ var ParseObj = {
 
       dislikedPost: function(id){
         this.dislikeArray.push(id)
-
-        // temporary
-        // this.savePost();
       },
 
       addPostsToWindow: function(postsids,func,pagetype){
@@ -160,6 +169,7 @@ var ParseObj = {
           // value does not exist in dislikeArray, this means that the undoed dislike post is not from the 
           // current activity, hence we'll keep it to remove it's record from the database.
           this.undoArray.push(id);
+          this.removePosts();
         }
       },
 
@@ -168,5 +178,6 @@ var ParseObj = {
 var parsee = Object.create(ParseObj);
 
 window.onbeforeunload = function() {
-  parsee.savePost();
+  parsee.savePosts();
+  parsee.removePosts();
 }

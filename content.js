@@ -63,7 +63,6 @@ var dislike_button = {
       if(temp.length == 0){
         // maybe the page is user profile page.
         $('[class*="_4-u2 mbm _5jmm _5pat _5v3q _4-u8"]').each(function(){
-          
           tag = $(this).attr('data-ft'); 
           json = $.parseJSON(tag);
           postid = json.top_level_post_id;
@@ -112,8 +111,10 @@ var dislike_button = {
 
         for(j=0;j<this.posts.length;j++){
 
-          if(results[i].get("POSTID") == this.posts[j].getPostID()){
-            this.posts[j].toggleDislike();
+          // since here we'll always switch the dislike to blue. We can check if it's already blue
+          // this will help us get rid of the error of toggling again and again while scrolling.
+          if(results[i].get("POSTID") == this.posts[j].getPostID() && !this.posts[j].isDisliked()){
+            this.posts[j].toggleDislike(false);
           }
         }
       }

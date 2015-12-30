@@ -38,21 +38,31 @@ var Post = {
     this.postID = postid;
   },
 
-  toggleDislike : function(){
+  toggleDislike : function(addToParseArray){
 
     if(this.disliked){
       this.disliked = false;
       this.associatedDislikeTag.children().attr('src',this.button_icon);
       this.associatedDislikeTag.css('color','#7f7f7f');
 
-      parsee.undoDislike(this.postID);
+      // this will only add the data to undoArray in parse.js if we performed
+      // this operation through button click instead of it's being set on page
+      // load.
+      if(addToParseArray){
+        parsee.undoDislike(this.postID);
+      }
     }
     else{
       this.disliked = true;
       this.associatedDislikeTag.children().attr('src',this.button_icon_pressed);
       this.associatedDislikeTag.css('color','#5890ff');
 
-      parsee.dislikedPost(this.postID);
+      // this will only add the data to undoArray in parse.js if we performed
+      // this operation through button click instead of it's being set on page
+      // load.
+      if(addToParseArray){
+        parsee.dislikedPost(this.postID);
+      }
     }
 
     return this.disliked;
@@ -77,7 +87,7 @@ var Post = {
     var self = this;
     this.associatedDislikeTag.click(function(){
 
-      self.toggleDislike();
+      self.toggleDislike(true);
 
     });
   },
