@@ -1,4 +1,6 @@
 
+// Paste your initialize code here.
+// Parse.initialize("", "");
 
 var ParseObj = {
 
