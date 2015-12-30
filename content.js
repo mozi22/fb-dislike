@@ -1,6 +1,7 @@
 var dislike_button = {
 
-    button_icon: null,
+    button_icon: chrome.extension.getURL("images/dislike_icon.png"),
+    button_icon_pressed: chrome.extension.getURL("images/dislike_icon_pressed.png"),
     $document: null,
 
 
@@ -9,8 +10,6 @@ var dislike_button = {
     init: function(){
 
       this.$document = jQuery(document);
-      this.button_icon = chrome.extension.getURL("images/dislike_icon.png");
-      this.button_icon_pressed = chrome.extension.getURL("images/dislike_icon_pressed.png");
     },
 
 
@@ -132,8 +131,14 @@ var dislike_button = {
 
     ChangeSelectedPostButtonColors: function(results,pagetype){
 
+      var button_icon =  chrome.extension.getURL("images/dislike_icon.png");
+      var button_icon_pressed =  chrome.extension.getURL("images/dislike_icon_pressed.png");
+
+
       if(results.length == 0)
         return;
+
+      var self = this;
 
       if(pagetype == "profile"){
         $('._4-u2.mbm._5jmm._5pat._5v3q._4-u8._x72._50nb').each(function(){
@@ -143,7 +148,7 @@ var dislike_button = {
             if(results[i].get("POSTID") == $.parseJSON($(this).attr('data-ft')).top_level_post_id){
               // matched. change the color of button to blue.
               var dislike_button = $(this).find('.dislike_button');
-              dislike_button.attr('src',self.button_icon_pressed);
+              dislike_button.attr('src',button_icon_pressed);
               dislike_button.css('color','#5890ff');
             }
           }
@@ -159,7 +164,7 @@ var dislike_button = {
 
               // make this button pressed.
               var dislike_button = $(this).find('.dislike_button');
-              dislike_button.attr('src',self.button_icon_pressed);
+              dislike_button.attr('src',button_icon_pressed);
               dislike_button.css('color','#5890ff');
             }
           }
